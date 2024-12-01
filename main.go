@@ -28,7 +28,7 @@ func readInput() []byte {
 		}
 	}(file)
 
-	buf := make([]byte, file)
+	buf := make([]byte, 14000)
 	for {
 		n, err := file.Read(buf)
 		if n == 0 {
