@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 )
@@ -17,29 +18,11 @@ func main() {
 }
 
 func readInput() []byte {
-	file, err := os.Open(`input.txt`)
+	data, err := os.ReadFile("input.txt")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(file)
-
-	buf := make([]byte, 14000)
-	for {
-		n, err := file.Read(buf)
-		if n == 0 {
-			break
-		}
-		if err != nil {
-			panic(err)
-		}
-		//fmt.Print(string(buf[:n]))
-	}
-	return buf
+	return data
 }
 
 func splitIntoSlices(input []byte) ([]uint, []uint) {
