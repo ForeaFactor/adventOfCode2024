@@ -11,7 +11,7 @@ func main() {
 	fmt.Println("Hello, World!")
 
 	buf := readInput()
-	print(string(buf[:]))
+	//print(string(buf[:]))
 
 	splitIntoSlices(buf)
 
@@ -27,10 +27,13 @@ func readInput() []byte {
 
 func splitIntoSlices(input []byte) ([]uint, []uint) {
 	sizeOfLine := 14
+	numberOfSpaces := 3
+	lengthOfNumber := 5
 	for i := 0; i < len(input)/sizeOfLine; i++ {
 		startOfLine := i * sizeOfLine
-		list1input, _ := strconv.Atoi(string(input[startOfLine : startOfLine+5]))
-		println(list1input)
+		list1input, _ := strconv.Atoi(string(input[startOfLine : startOfLine+lengthOfNumber]))
+		list2input, _ := strconv.Atoi(string(input[startOfLine+lengthOfNumber+numberOfSpaces : startOfLine+lengthOfNumber+numberOfSpaces+lengthOfNumber]))
+		println(strconv.Itoa(list1input) + " " + strconv.Itoa(list2input))
 	}
 	return make([]uint, 1), make([]uint, 1)
 }
