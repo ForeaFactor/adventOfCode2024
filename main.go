@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -9,19 +8,17 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, World!")
-
 	buf := readInput()
-	//print(string(buf[:]))
 
 	sliceOne, sliceTwo := splitIntoSlices(buf)
-	sort.Ints(sliceOne)
-	sort.Ints(sliceTwo)
 
 	println(calcDistance(sliceOne, sliceTwo))
 }
 
 func calcDistance(sliceOne []int, sliceTwo []int) int {
+	sort.Ints(sliceOne)
+	sort.Ints(sliceTwo)
+
 	var sum int
 	sum = 0
 	for i, value := range sliceOne {
@@ -50,7 +47,7 @@ func splitIntoSlices(input []byte) ([]int, []int) {
 		startOfLine := i * sizeOfLine
 		list1input, _ := strconv.Atoi(string(input[startOfLine : startOfLine+lengthOfNumber]))
 		list2input, _ := strconv.Atoi(string(input[startOfLine+lengthOfNumber+numberOfSpaces : startOfLine+lengthOfNumber+numberOfSpaces+lengthOfNumber]))
-		println(strconv.Itoa(list1input) + " " + strconv.Itoa(list2input))
+		//println(strconv.Itoa(list1input) + " " + strconv.Itoa(list2input))
 
 		sliceOne = append(sliceOne, list1input)
 		sliceTwo = append(sliceTwo, list2input)
