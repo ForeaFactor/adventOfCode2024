@@ -1,6 +1,7 @@
 package day_01
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -12,10 +13,12 @@ func Main() {
 
 	sliceOne, sliceTwo := splitIntoSlices(buf)
 
-	println(calcDistance(sliceOne, sliceTwo))
+	println("\n====== DAY 01 ======\n")
+	fmt.Printf("%d = Distance of Lists\n", distanceOfLists(sliceOne, sliceTwo))
+	fmt.Printf("%d = Similarity Score of Lists\n", similarityScoreOfLists(sliceTwo, sliceOne))
 }
 
-func calcDistance(sliceOne []int, sliceTwo []int) int {
+func distanceOfLists(sliceOne []int, sliceTwo []int) int {
 	sort.Ints(sliceOne)
 	sort.Ints(sliceTwo)
 
@@ -62,4 +65,21 @@ func absDiffInt(x, y int) int {
 		return y - x
 	}
 	return x - y
+}
+
+// the similarity score according to the tasks description
+func similarityScoreOfLists(sliceOne []int, sliceTwo []int) int {
+	score := 0
+	for _, val := range sliceOne {
+		countOfMatchesToVal := 0
+
+		for _, potentialMatchToVal := range sliceTwo {
+			if val == potentialMatchToVal {
+				countOfMatchesToVal++
+			}
+		}
+
+		score += countOfMatchesToVal * val
+	}
+	return score
 }
