@@ -13,7 +13,7 @@ func Main() {
 
 	sliceOne, sliceTwo := splitIntoSlices(buf)
 
-	println("\n====== DAY 01 ======\n")
+	fmt.Printf("\n====== DAY 01 ======\n")
 	fmt.Printf("%d = Distance of Lists\n", distanceOfLists(sliceOne, sliceTwo))
 	fmt.Printf("%d = Similarity Score of Lists\n", similarityScoreOfLists(sliceTwo, sliceOne))
 }
