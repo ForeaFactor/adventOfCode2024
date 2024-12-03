@@ -66,8 +66,7 @@ func countSecureReports(reportList [][]int) int {
 	var numOfSaveReports = 0
 
 	for _, report := range reportList {
-		isSave, _ := validateReport(report)
-		if isSave {
+		if isSave(report) {
 			numOfSaveReports++
 		}
 	}
@@ -75,7 +74,7 @@ func countSecureReports(reportList [][]int) int {
 	return numOfSaveReports
 }
 
-func validateReport(report []int) (bool, int) {
+func isSave(report []int) bool {
 	// follow the wierd rules in the day02 task, that specify weather as report is 'save'
 	// just need to compare all numbers next to each other
 	diffAtFront := report[1] - report[0]
@@ -89,89 +88,22 @@ func validateReport(report []int) (bool, int) {
 		diff := report[i+1] - report[i]
 		dirCorDiff := diff * reportGrowthDirection // growth direction corrected diff
 		if dirCorDiff <= 0 || dirCorDiff >= 4 {
-			return false, i + 1 // return the place (number index in report) of the failure as error-code
+			return false
 		}
 	}
-	return true, -1
+	return true
 }
 
 func countSecureReportsWithProblemDampener(reportList [][]int) int {
 	var numOfSaveReports = 0
 
 	for _, report := range reportList {
-		isSave := isSafeWithDampener(report)
-		if isSave {
+		if isSafeWithDampener(report) {
 			numOfSaveReports++
 		}
-		//fmt.Printf("%t %d %d \n", isSave, failedAtIndex, report)
 	}
 	//fmt.Printf("%2d ", reportList)
 	return numOfSaveReports
-}
-
-func validateReportWithProblemDampener(report []int) (bool, int) {
-	// follow the wierd rules in the day02 task, that specify weather as report is 'save'
-	// just need to compare all numbers next to each other
-	// 8 6 x4x 4 1 When Error: check if removing before, inside, after changes anything
-	// 8     4 4 1 false
-	// 8 6     4 1 true
-	// 8 6  4    1 true
-
-	valRes, errCode := validateReport(report)
-	//	fmt.Printf("%t %d %d \n", valRes, errCode, report)
-	if valRes == true {
-		return true, -1
-	}
-	report1 := removeIndexInSlice(report, errCode-1)
-	valRes, _ = validateReport(report1)
-	//	fmt.Printf("%t %d %d \n", valRes, errCode, report1)
-	if valRes == true {
-		return true, errCode
-	}
-	report2 := removeIndexInSlice(report, errCode)
-	valRes, _ = validateReport(report2)
-	//	fmt.Printf("%t %d %d \n", valRes, errCode, report2)
-	if valRes == true {
-		return true, errCode
-	}
-	report3 := removeIndexInSlice(report, errCode+1)
-	valRes, _ = validateReport(report3)
-	//	fmt.Printf("%t %d %d \n", valRes, errCode, report3)
-	if valRes == true {
-		return true, errCode
-	}
-	return false, errCode
-}
-
-func removeIndexInSlice(slice []int, index int) []int {
-	if index > len(slice)-1 || index < 0 {
-		return slice // prevent access outside of slice
-	}
-	shorterSlice := make([]int, 0, len(slice)-1)
-	shorterSlice = append(shorterSlice, slice[:index]...)
-	shorterSlice = append(shorterSlice, slice[index+1:]...)
-
-	return shorterSlice
-}
-
-func isSafe(report []int) bool {
-	isIncreasing := true
-	isDecreasing := true
-
-	for i := 0; i < len(report)-1; i++ {
-		diff := report[i+1] - report[i]
-		if diff < 1 || diff > 3 {
-			return false
-		}
-		if diff > 0 {
-			isDecreasing = false
-		}
-		if diff < 0 {
-			isIncreasing = false
-		}
-	}
-
-	return isIncreasing || isDecreasing
 }
 
 // isSafeWithDampener checks if a report becomes safe after removing a single level
@@ -183,7 +115,7 @@ func isSafeWithDampener(report []int) bool {
 		modifiedReport = append(modifiedReport, report[i+1:]...)
 
 		// Check if the modified report is safe
-		if isSafe(modifiedReport) {
+		if isSave(modifiedReport) {
 			return true
 		}
 	}
