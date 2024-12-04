@@ -67,9 +67,6 @@ func (w *wordMap) findAllWords(searchWord []byte) {
 		}
 	}
 	// create word for each starting coordinate
-
-	// printfdebug
-	fmt.Printf("Found %d words starting at %v\n", len(wordStartsCoords), wordStartsCoords)
 }
 
 //---------functions declaration---------
