@@ -14,7 +14,6 @@ func Main() {
 	fmt.Printf("\n====== DAY 03 ======\n")
 	fmt.Printf("%d = Sum of all Multiplications\n", sumAllMultiplications(input))
 	fmt.Printf("%d = Sum of all endabled Multiplications\n", calculateSumWithEnablers(input))
-
 }
 
 func calculateSumWithEnablers(input []byte) int {
