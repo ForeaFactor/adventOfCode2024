@@ -23,8 +23,8 @@ func Main() {
 	var tsk2 wordMap
 	tsk2.readIntoDataFromText(input)
 	tsk2.findAllWords([]byte("MAS"))
-	crosses := findALlXmadeOfMAS(tsk2)
-	confirmCrossCenters(tsk2, crosses)
+	crosses := findAllXmadeOfMAS(tsk2)
+	tsk2.confirmCrossCenters(crosses)
 
 	fmt.Printf("\n====== DAY 04 ======\n")
 	fmt.Printf("%d = Number of 'XMAS' in input\n", len(tsk1.words))
@@ -193,6 +193,13 @@ func (w *wordMap) wordExists(searchedWord word) bool {
 	return false
 }
 
+// just needed for debuging
+func (w *wordMap) confirmCrossCenters(centers []coords) {
+	for _, coord := range centers {
+		fmt.Printf("%d exists %t\n", coord, w.crossExists(coord))
+	}
+}
+
 func (w word) equalsByValue(wrd word) bool {
 	// checks if two word cover the same positions - since
 	lengthIsEqual := w.length == wrd.length
@@ -211,9 +218,10 @@ func readInput() []byte {
 	return data
 }
 
-func findALlXmadeOfMAS(w wordMap) []coords {
-	// clean wrd list - remove each MAS not part of a X-Cross
-	// count X-Mas - Count all centers of x-MAS 'A'
+func findAllXmadeOfMAS(w wordMap) []coords {
+	// start at the center of each 'MAS' where 'A' would be the center of a cross
+	// check at each of these 'A's, if there is a cross
+	// confirmed crosses are collected in a Set - redundant find are eliminated this way
 	crossCordSet := make(map[coords]struct{}) // recommended practise for creating a set
 
 	for _, wrd := range w.words {
@@ -222,7 +230,9 @@ func findALlXmadeOfMAS(w wordMap) []coords {
 			x: wrd.anchor.x + wrd.direction.xDisplacement*centerDistanceFromStartOfWord,
 			y: wrd.anchor.y + wrd.direction.yDisplacement*centerDistanceFromStartOfWord,
 		}
-		crossCordSet[centerOfWord] = struct{}{} // collect all unique centers
+		if w.crossExists(centerOfWord) {
+			crossCordSet[centerOfWord] = struct{}{} // collect all unique centers
+		}
 	}
 	// just parsing the set to an array
 	allCrossCords := make([]coords, 0, len(crossCordSet))
@@ -231,10 +241,4 @@ func findALlXmadeOfMAS(w wordMap) []coords {
 	}
 
 	return allCrossCords
-}
-
-func confirmCrossCenters(w wordMap, centers []coords) {
-	for _, coord := range centers {
-		fmt.Printf("%d exists %t\n", coord, w.crossExists(coord))
-	}
 }
