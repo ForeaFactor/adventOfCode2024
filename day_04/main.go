@@ -9,14 +9,24 @@ import (
 	"regexp"
 )
 
+/*
+Solution one:	scan from each of the 8 directions
+Solution two:	branch out of each
+*/
+
 func Main() {
 	input := readInput()
-	var ridl wordMap
-	ridl.readIntoDataFromText(input)
-	ridl.findAllWords([]byte("XMAS"))
+	var tsk1 wordMap
+	tsk1.readIntoDataFromText(input)
+	tsk1.findAllWords([]byte("XMAS"))
+
+	var tsk2 wordMap
+	tsk2.readIntoDataFromText(input)
+	tsk2.findAllWords([]byte("MAS"))
 
 	fmt.Printf("\n====== DAY 04 ======\n")
-	fmt.Printf("%d = Number of 'XMAS' in input\n", len(ridl.words))
+	fmt.Printf("%d = Number of 'XMAS' in input\n", len(tsk1.words))
+	fmt.Printf("%d = Number of X-MAS in output\n", len(tsk2.words))
 
 }
 
@@ -125,6 +135,71 @@ func (w *wordMap) wordToString(wrd word) (string, error) {
 	return buff.String(), nil
 }
 
+func (w *wordMap) wordIsPartOfACross(wrd word) bool {
+	/* a Cross:
+	.S.M.S
+	..A.A.
+	.S.M.S
+	..A.A.
+	.S.M.S
+	*/
+	potPartner1 := word{
+		anchor: coords{
+			x: wrd.anchor.x,
+			y: wrd.anchor.y(-1),
+		},
+		direction: vector{},
+		length:    wrd.length,
+	}
+
+}
+
+func (w wordMap) crossExists(center coords) bool {
+	// true if two of four partners exist
+	// hardcoded for MAS ; add word in args to make it universal
+	var centerShiftDirs = [4]vector{
+		{-1, -1},
+		{-1, 1},
+		{1, -1},
+		{1, 1},
+	}
+	exitstingWords := 0
+	for _, dir := range centerShiftDirs {
+		potCrossMemb := word{
+			anchor: coords{
+				x: center.x + dir.xDisplacement,
+				y: center.y + dir.yDisplacement,
+			},
+			direction: vector{
+				xDisplacement: dir.xDisplacement * (-1),
+				yDisplacement: dir.yDisplacement * (-1),
+			},
+			length: 3,
+		}
+		if w.wordExists(potCrossMemb) {
+			exitstingWords += 1
+		}
+	}
+}
+
+func (w *wordMap) wordExists(searchedWord word) bool {
+	// see, if the word was stored in the Wordlist
+	for _, storedWord := range w.words {
+		if storedWord.equalsByValue(searchedWord) {
+			return true
+		}
+	}
+	return false
+}
+
+func (w word) equalsByValue(wrd word) bool {
+	// checks if two word cover the same positions - since
+	lengthIsEqual := w.length == wrd.length
+	directionIsEqual := w.direction.yDisplacement == wrd.direction.yDisplacement && w.direction.xDisplacement == wrd.direction.xDisplacement
+	anchorIsEqual := w.anchor.y == wrd.anchor.y && w.anchor.x == wrd.anchor.x
+	return lengthIsEqual && directionIsEqual && anchorIsEqual
+}
+
 //---------functions declaration---------
 
 func readInput() []byte {
@@ -133,4 +208,11 @@ func readInput() []byte {
 		log.Fatal(err)
 	}
 	return data
+}
+
+func findALlXmadeOfMAS(w wordMap) []coords {
+	// clean word list - remove each MAS not part of a X-Cross
+	// count X-Mas - Count all centers of x-MAS 'A'
+
+	return xmasCenters
 }
