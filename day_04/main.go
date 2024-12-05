@@ -84,7 +84,7 @@ func (w *wordMap) findAllWords(searchWord []byte) {
 	var buff []word
 	for _, word := range w.words {
 		s, _ := w.wordToString(word)
-		pattern := `XMAS`
+		pattern := string(searchWord)
 		re := regexp.MustCompile(pattern)
 		if re.MatchString(s) {
 			// only collect valid words
