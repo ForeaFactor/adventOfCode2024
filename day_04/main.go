@@ -23,10 +23,12 @@ func Main() {
 	var tsk2 wordMap
 	tsk2.readIntoDataFromText(input)
 	tsk2.findAllWords([]byte("MAS"))
+	crosses := findALlXmadeOfMAS(tsk2)
+	confirmCrossCenters(tsk2, crosses)
 
 	fmt.Printf("\n====== DAY 04 ======\n")
 	fmt.Printf("%d = Number of 'XMAS' in input\n", len(tsk1.words))
-	fmt.Printf("%d = Number of X-MAS in output\n", len(tsk2.words))
+	fmt.Printf("%d = Number of X-MAS in output\n", len(crosses))
 
 }
 
@@ -103,10 +105,10 @@ func (w *wordMap) findAllWords(searchWord []byte) {
 	}
 	w.words = buff
 
-	for _, word := range w.words {
+	/*for _, word := range w.words {
 		s, _ := w.wordToString(word)
 		fmt.Printf("%s @[%3d|%3d] \n", s, word.anchor.x, word.anchor.y)
-	}
+	}*/
 
 }
 
@@ -135,7 +137,7 @@ func (w *wordMap) wordToString(wrd word) (string, error) {
 	return buff.String(), nil
 }
 
-func (w *wordMap) wordIsPartOfACross(wrd word) bool {
+func (w *wordMap) wordIsPartOfACross(wrd word, center coords) bool {
 	/* a Cross:
 	.S.M.S
 	..A.A.
@@ -143,18 +145,16 @@ func (w *wordMap) wordIsPartOfACross(wrd word) bool {
 	..A.A.
 	.S.M.S
 	*/
-	potPartner1 := word{
-		anchor: coords{
-			x: wrd.anchor.x,
-			y: wrd.anchor.y(-1),
-		},
-		direction: vector{},
-		length:    wrd.length,
+	//TODO: if wrd.length is uneven return false
+	//TODO: get word center
+	if !w.wordExists(wrd) {
+		return false
 	}
+	return w.crossExists(center)
 
 }
 
-func (w wordMap) crossExists(center coords) bool {
+func (w *wordMap) crossExists(center coords) bool {
 	// true if two of four partners exist
 	// hardcoded for MAS ; add word in args to make it universal
 	var centerShiftDirs = [4]vector{
@@ -180,6 +180,7 @@ func (w wordMap) crossExists(center coords) bool {
 			exitstingWords += 1
 		}
 	}
+	return exitstingWords == 2
 }
 
 func (w *wordMap) wordExists(searchedWord word) bool {
@@ -211,8 +212,29 @@ func readInput() []byte {
 }
 
 func findALlXmadeOfMAS(w wordMap) []coords {
-	// clean word list - remove each MAS not part of a X-Cross
+	// clean wrd list - remove each MAS not part of a X-Cross
 	// count X-Mas - Count all centers of x-MAS 'A'
+	crossCordSet := make(map[coords]struct{}) // recommended practise for creating a set
 
-	return xmasCenters
+	for _, wrd := range w.words {
+		centerDistanceFromStartOfWord := wrd.length / 2 // len 5 should give index 2
+		centerOfWord := coords{
+			x: wrd.anchor.x + wrd.direction.xDisplacement*centerDistanceFromStartOfWord,
+			y: wrd.anchor.y + wrd.direction.yDisplacement*centerDistanceFromStartOfWord,
+		}
+		crossCordSet[centerOfWord] = struct{}{} // collect all unique centers
+	}
+	// just parsing the set to an array
+	allCrossCords := make([]coords, 0, len(crossCordSet))
+	for coord, _ := range crossCordSet {
+		allCrossCords = append(allCrossCords, coord)
+	}
+
+	return allCrossCords
+}
+
+func confirmCrossCenters(w wordMap, centers []coords) {
+	for _, coord := range centers {
+		fmt.Printf("%d exists %t\n", coord, w.crossExists(coord))
+	}
 }
