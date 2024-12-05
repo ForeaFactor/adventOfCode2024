@@ -3,23 +3,21 @@ package day_04
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"regexp"
 )
 
 func Main() {
 	input := readInput()
-
-	fmt.Printf("\n====== DAY 04 ======\n")
-	fmt.Printf("%d = Number of 'XMAS' in input\n", 0)
-
 	var ridl wordMap
 	ridl.readIntoDataFromText(input)
-	/*	for i := range ridl.data {
-			fmt.Printf("%s\n", string(ridl.data[i]))
-		}
-	*/
 	ridl.findAllWords([]byte("XMAS"))
+
+	fmt.Printf("\n====== DAY 04 ======\n")
+	fmt.Printf("%d = Number of 'XMAS' in input\n", len(ridl.words))
+
 }
 
 //---------structs declaration---------
@@ -34,6 +32,7 @@ type vector struct {
 	yDisplacement int
 }
 
+// words can only exist as part of a wordMap (is not jet enforeced unfortunatyly)
 type word struct {
 	anchor    coords
 	direction vector
@@ -55,8 +54,6 @@ func (w *wordMap) readIntoDataFromText(wordMapAsText []byte) {
 }
 
 func (w *wordMap) findAllWords(searchWord []byte) {
-	// remove invalid words from the wordList
-
 	// make List of all Start chars
 	var wordStartsCoords []coords
 	for yCord, Line := range w.data {
@@ -67,6 +64,65 @@ func (w *wordMap) findAllWords(searchWord []byte) {
 		}
 	}
 	// create word for each starting coordinate
+	for _, coord := range wordStartsCoords {
+		directions := []vector{
+			{-1, -1},
+			{0, -1},
+			{1, -1},
+			{-1, 0},
+			{1, 0},
+			{-1, 1},
+			{0, 1},
+			{1, 1},
+		}
+		for _, direction := range directions {
+			_ = w.addNewWord(coord, direction, len(searchWord)) // does not matter, if a potential word reaches eof
+		}
+	}
+
+	// remove invalid words from the wordList (all invalid, because out of bound already removed)
+	var buff []word
+	for _, word := range w.words {
+		s, _ := w.wordToString(word)
+		pattern := `XMAS`
+		re := regexp.MustCompile(pattern)
+		if re.MatchString(s) {
+			// only collect valid words
+			buff = append(buff, word)
+		}
+	}
+	w.words = buff
+
+	for _, word := range w.words {
+		s, _ := w.wordToString(word)
+		fmt.Printf("%s @[%3d|%3d] \n", s, word.anchor.x, word.anchor.y)
+	}
+
+}
+
+func (w *wordMap) addNewWord(startCord coords, direction vector, length int) error {
+	newWord := word{startCord, direction, length}
+	_, eof := w.wordToString(newWord)
+	if eof != nil {
+		return eof
+	}
+	w.words = append(w.words, newWord)
+	return nil
+}
+
+func (w *wordMap) wordToString(wrd word) (string, error) {
+	// serves as readWord() function
+	buff := bytes.Buffer{}
+	for i := 0; i < wrd.length; i++ {
+		charCordX := wrd.anchor.x + i*wrd.direction.xDisplacement
+		charCordY := wrd.anchor.y + i*wrd.direction.yDisplacement
+		if charCordY >= len(w.data) || charCordY < 0 || charCordX >= len(w.data[charCordY]) || charCordX < 0 {
+			return buff.String(), io.EOF // Out of Bound is similar to EOF :)
+		}
+		char := w.data[charCordY][charCordX]
+		buff.WriteByte(char)
+	}
+	return buff.String(), nil
 }
 
 //---------functions declaration---------
