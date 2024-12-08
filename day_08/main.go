@@ -10,7 +10,7 @@ import (
 
 func Main() {
 	input := readInput("./day_08/input.txt")
-	locationsMap := genAntennasGridFromText(input)
+	locationsMap := generateAntennasGridFromText(input)
 
 	fmt.Printf("\n====== DAY 04 ======\n")
 	fmt.Printf("%d = Number of Antinodes\n", countAntinodes(locationsMap))
@@ -23,6 +23,7 @@ func Main() {
 type poi interface {
 	getIcon() byte // uses char as type specifier
 	getPos() cord
+	isAllowedToExistIn(g *grid) bool
 }
 
 type grid struct {
@@ -53,6 +54,17 @@ type vector struct {
 	yShift int
 }
 
+func (g *grid) addPois(input []poi) {
+	/*	List of Points Of Interrest can contain
+		- POIs outside the gridSize
+		- POIs at positions, where POI(s) already exist */
+	for _, point := range input {
+		if point.isAllowedToExistIn(g) {
+			g.pois[point.getPos()] = append(g.pois[point.getPos()], point)
+		}
+	}
+}
+
 func (g *grid) exportGridToText() []byte {
 	txt := make([]byte, (g.width+1)*g.height)
 	var txtPos int
@@ -77,7 +89,7 @@ func (g *grid) exportGridToText() []byte {
 //---------methods declaration---------
 
 func (g *grid) getPoiByPos(c cord) *poi {
-	// only the first will  be shown - to lazy
+	// only the first will  be shown - to lazy ¯\_(ツ)_/¯
 	point := poi(nil)
 	if g.pois[c] != nil {
 		point = g.pois[c][0]
@@ -93,12 +105,39 @@ func (a poiAntenna) getIcon() byte {
 	return a.icon
 }
 
+func (a poiAntenna) isAllowedToExistIn(g *grid) bool {
+	// multiple antennas at same Coordinates are allowed
+	if isIntBetween(0, g.width, a.pos.x) && isIntBetween(0, g.height, a.pos.y) {
+		return true
+	}
+	return false
+}
+
 func (a poiAntinode) getPos() cord {
 	return a.pos
 }
 
 func (a poiAntinode) getIcon() byte {
 	return a.icon
+}
+
+func (a poiAntinode) isAllowedToExistIn(g *grid) bool {
+	// [ ] multiple antinodes of the same freqency are not allowed
+	// [x] muliple antinodes per position are not allowed at all
+	if false == isIntBetween(0, g.width, a.pos.x) && isIntBetween(0, g.height, a.pos.y) {
+		return false
+	}
+	existingPois := g.pois[a.pos]
+	if len(existingPois) == 0 {
+		return true // obviously -- I mean -- there are no others
+	}
+	for _, point := range existingPois {
+		// TODO: access Antinode frequency by performing a 'type switch' on the poi interface
+		if point.getIcon() == a.icon {
+			return false
+		}
+	}
+	return true
 }
 
 // poiAntenna Constructor
@@ -128,7 +167,7 @@ func readInput(name string) []byte {
 
 //---------functions declaration---------
 
-func genAntennasGridFromText(input []byte) grid {
+func generateAntennasGridFromText(input []byte) grid {
 	// assume ascii Encoding
 	var out grid
 	out.pois = make(map[cord][]poi)
@@ -139,17 +178,21 @@ func genAntennasGridFromText(input []byte) grid {
 	for yCord, line := range in {
 		for xCord, icon := range line {
 			pos := cord{x: xCord, y: yCord}
-			antenna_p := newPoiAntenna(byte(icon), pos)
-			if antenna_p != nil {
-				out.pois[pos] = append(out.pois[pos], *antenna_p)
+			antennaP := newPoiAntenna(byte(icon), pos)
+			if antennaP != nil {
+				out.pois[pos] = append(out.pois[pos], *antennaP)
 			}
 		}
 	}
-
 	return out
 }
 
 func countAntinodes(g grid) uint {
 	// TODO: implement
 	return 0
+}
+
+func isIntBetween(lower int, upper int, x int) bool {
+	// inlcuding upper and lower
+	return x >= lower && x <= upper
 }
