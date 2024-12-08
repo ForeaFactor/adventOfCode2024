@@ -193,10 +193,11 @@ func (w *wordMap) wordExists(searchedWord word) bool {
 	return false
 }
 
-// just needed for debuging
+// just needed for printf debuging
 func (w *wordMap) confirmCrossCenters(centers []coords) {
 	for _, coord := range centers {
-		fmt.Printf("%d exists %t\n", coord, w.crossExists(coord))
+		//fmt.Printf("%d exists %t\n", coord, w.crossExists(coord))
+		coord.x = 1 // dummy funcion to be removed - has no effect on anything
 	}
 }
 
