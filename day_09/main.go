@@ -1,6 +1,7 @@
 package day_09
 
 import (
+	"crypto/cipher"
 	"fmt"
 	"io"
 	"log"
@@ -11,25 +12,36 @@ import (
 func Main() {
 	input := readInput("./day_09/input.txt")
 	diskMap := interpretBytesAsNumerals(input)
-	disk := newStorageFromDiskMap(diskMap)
-	disk.compact()
+	diskTsk1 := newStorageFromDiskMap(diskMap)
+	diskTsk1.compactTsk1()
+	diskTsk2 := newStorageFromDiskMap(diskMap)
+	diskTsk2.compactTsk2()
 
 	fmt.Printf("\n====== DAY 8 ======\n")
-	fmt.Printf("%d = Checksum Of File After Compacting\n", disk.checksum())
-	fmt.Println(string(disk.exportDataToText()))
+	fmt.Printf("%d = Checksum Of File After Compacting\n", diskTsk1.checksum())
+	fmt.Printf("%d = Checksum Of File After Compacting Better\n", diskTsk2.checksum())
+	fmt.Println(string(diskTsk1.exportDataToText()))
 
 }
 
 //---------structs declaration---------
 
 type storage struct {
-	data []datapoint
+	data   []datapoint
+	lookup []block
 }
 
 type datapoint struct {
 	// typ 0 = free space | typ 1 = file
+	// datapoint is more of a datatype struct to distinct stored information
 	id  int
 	typ byte
+}
+
+type block struct {
+	start  int
+	length int
+	datapoint
 }
 
 func newStorageFromDiskMap(in []byte) storage {
@@ -61,7 +73,22 @@ func newStorageFromDiskMap(in []byte) storage {
 	return storage{data: out[:idxOut]}
 }
 
-func (s *storage) compact() {
+func (s *storage) exportDataToText() string {
+	var out string
+	for _, dataPoint := range s.data {
+		switch dataPoint.typ {
+		case 0:
+			out += "."
+		case 1:
+			out += "[" + strconv.Itoa(dataPoint.id) + "]" // this results in wierd characters
+		}
+	}
+	return out
+}
+
+//---------methods declaration---------
+
+func (s *storage) compactTsk1() {
 	var iterFront int = -1 // assign outOfBound Indicies cause nextIter function increments directly
 	var iterBack int = len(s.data)
 	for iterFront < iterBack {
@@ -80,19 +107,14 @@ func (s *storage) compact() {
 	}
 }
 
-//---------methods declaration---------
+func (s *storage) compactTsk2() {
+	// to Tsk2
 
-func (s *storage) exportDataToText() string {
-	var out string
-	for _, dataPoint := range s.data {
-		switch dataPoint.typ {
-		case 0:
-			out += "."
-		case 1:
-			out += "[" + strconv.Itoa(dataPoint.id) + "]" // this results in wierd characters
-		}
-	}
-	return out
+}
+
+func (s *storage) updateLookup() {
+	// to Tsk2
+
 }
 
 func (s *storage) nextDatapoint(iter *int, typ byte) (datapoint, error) {
@@ -123,6 +145,48 @@ func (s *storage) prevDatapoint(iter *int, typ byte) (datapoint, error) {
 			return s.data[*iter], nil
 		}
 	}
+}
+
+func (s *storage) allocateSpace(size int) (int, error) {
+	// or rather find continuous allocated Space - I don't bother to reserve it
+	// size is the number of dataPoints and the search starts at the leftmost(first) dataPoint
+	var freeBlockLen int = 0
+	for i, dataPoint := range s.data {
+		if dataPoint.typ == 0 {
+			freeBlockLen++
+		} else {
+			// check if block long enough was found
+			if freeBlockLen >= size {
+				var startOfFreeBlock int = i - freeBlockLen
+				return startOfFreeBlock, nil
+			}
+			freeBlockLen = 0
+		}
+	}
+	return -1, fmt.Errorf("no free space of size %d", size)
+}
+
+func (s *storage) nextBlockOfDataPoints(start int, typ byte, direction int) (int, int, error) {
+	// returns start and length of the block found - can search towards the left (-1) or right (1) of the start
+	// TODO: restric direction to be either -1 or 1
+	var blockLen int = 0
+	var currBlockDP datapoint = s.data[start]
+	for i := start; i < len(s.data) && i > 0; i += direction {
+		if s.data[i] == currBlockDP {
+			blockLen++
+		} else {
+			// block ended since the datapoint changed
+			var blockStart int // defaults to 0
+			if direction > 0 {
+				blockStart = i - blockLen
+			}
+			if direction < 0 {
+				blockStart = i + 1
+			}
+			return blockStart, blockLen, nil
+		}
+	}
+
 }
 
 func (s *storage) swapDatapoints(front int, back int) {
