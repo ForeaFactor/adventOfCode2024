@@ -12,7 +12,7 @@ func Main() {
 	input := readInput("./day_09/input.txt")
 	diskMap := interpretBytesAsNumerals(input)
 	disk := newStorageFromDiskMap(diskMap)
-	disk.defragment()
+	disk.compact()
 
 	fmt.Printf("\n====== DAY 8 ======\n")
 	fmt.Printf("%d = Checksum Of File After Compacting\n", disk.checksum())
@@ -61,7 +61,7 @@ func newStorageFromDiskMap(in []byte) storage {
 	return storage{data: out[:idxOut]}
 }
 
-func (s *storage) defragment() {
+func (s *storage) compact() {
 	var iterFront int = -1 // assign outOfBound Indicies cause nextIter function increments directly
 	var iterBack int = len(s.data)
 	for iterFront < iterBack {
