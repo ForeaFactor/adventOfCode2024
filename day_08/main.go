@@ -21,7 +21,7 @@ func Main() {
 	antinodes = generateAntinodesModelTsk2(&gridTsk2)
 	gridTsk2.addPoiAntinodes(antinodes)
 
-	fmt.Printf("\n====== DAY 04 ======\n")
+	fmt.Printf("\n====== DAY 08 ======\n")
 	fmt.Printf("%d = Number of Antinodes\n", countAntinodes(gridTsk1))
 	fmt.Printf("%d = Number of Antinodes corrected Model (Tsk2)\n", countAntinodes(gridTsk2))
 
