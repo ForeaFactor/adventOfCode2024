@@ -9,13 +9,13 @@ import (
 )
 
 func Main() {
-	input := readInput("./day_09/sample.txt")
+	input := readInput("./day_09/input.txt")
 	diskMap := interpretBytesAsNumerals(input)
 	disk := newStorageFromDiskMap(diskMap)
 	disk.defragment()
 
 	fmt.Printf("\n====== DAY 8 ======\n")
-	fmt.Printf("%d = \n", 0)
+	fmt.Printf("%d = Checksum Of File After Compacting\n", disk.checksum())
 	fmt.Println(string(disk.exportDataToText()))
 
 }
@@ -62,16 +62,22 @@ func newStorageFromDiskMap(in []byte) storage {
 }
 
 func (s *storage) defragment() {
-	var iterFront int = 0
-	var iterBack int = len(s.data) - 1
-
+	var iterFront int = -1 // assign outOfBound Indicies cause nextIter function increments directly
+	var iterBack int = len(s.data)
 	for iterFront < iterBack {
-		s.swapDatapoints(iterFront, iterBack)
-
+		// next emptyStoragePoint typ 0 - iterFront is advanced
+		if _, err := s.nextDatapoint(&iterFront, 0); err == io.EOF {
+			panic(err)
+		}
+		// next fileDataPoint typ 1 - iterBack is advanced
+		if _, err := s.prevDatapoint(&iterBack, 1); err == io.EOF {
+			panic(err)
+		}
+		if iterFront < iterBack /* Condition because then all spaces have been filled*/ {
+			s.swapDatapoints(iterFront, iterBack)
+		}
+		//fmt.Printf("%s\n", s.exportDataToText())
 	}
-
-	iterFront, err = s.nextDatapoint(iterFront, 0)
-	iterBack, err = s.prevDatapoint(iterBack, 1)
 }
 
 //---------methods declaration---------
@@ -91,27 +97,30 @@ func (s *storage) exportDataToText() string {
 
 func (s *storage) nextDatapoint(iter *int, typ byte) (datapoint, error) {
 	//scan storage for the next dataPoint of type typ
-
+	// returns empty datapoint when eof
 	for {
 		*iter = *iter + 1
-		if iter >= len(s.data) || iter < 0 {
-			return -1, io.EOF
+		if *iter >= len(s.data) || *iter < 0 {
+			*iter = len(s.data) // stop iter progress here
+			return *new(datapoint), io.EOF
 		}
-		if s.data[iter].typ == typ {
-			return iter, nil
+		if s.data[*iter].typ == typ {
+			return s.data[*iter], nil
 		}
 	}
 }
 
-func (s *storage) prevDatapoint(iter int, typ byte) (int, error) {
-	//scan storage for the next dataPoint of type typ
+func (s *storage) prevDatapoint(iter *int, typ byte) (datapoint, error) {
+	// scan storage for the prev dataPoint of type typ
+	// returns empty datapoint when eof
 	for {
-		iter--
-		if iter >= len(s.data) || iter < 0 {
-			return -1, io.EOF
+		*iter = *iter - 1
+		if *iter >= len(s.data) || *iter < 0 {
+			*iter = 0 // stop iter progress here
+			return *new(datapoint), io.EOF
 		}
-		if s.data[iter].typ == typ {
-			return iter, nil
+		if s.data[*iter].typ == typ {
+			return s.data[*iter], nil
 		}
 	}
 }
@@ -120,6 +129,18 @@ func (s *storage) swapDatapoints(front int, back int) {
 	tmp := s.data[front]
 	s.data[front] = s.data[back]
 	s.data[back] = tmp
+}
+
+func (s *storage) checksum() uint64 {
+	var checksum uint64 = 0
+	var pointPos int = 0
+	for _, dataPoint := range s.data {
+		if dataPoint.typ != 0 {
+			checksum += uint64(pointPos * dataPoint.id)
+			pointPos++
+		}
+	}
+	return checksum
 }
 
 //---------functions declaration---------
