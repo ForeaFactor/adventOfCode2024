@@ -86,7 +86,7 @@ func (g *grid) exportGridToText() []byte {
 	for y := 0; y < g.height; y++ {
 		for x := 0; x < g.width; x++ {
 			gridPoint := *g.getPoiByPos(cord{x, y})
-			icon := byte(' ')
+			icon := byte('.')
 			if gridPoint != nil {
 				icon = gridPoint.getIcon()
 			}
@@ -161,8 +161,8 @@ func (a poiAntinode) isAllowedToExistIn(g *grid) bool {
 	return true
 }
 
-// poiAntenna Constructor
 func newPoiAntenna(freq byte, pos cord) *poiAntenna {
+	// poiAntenna Constructor
 	r := regexp.MustCompile("[0-9A-Za-z_]")
 	if r.Match([]byte{freq}) == false {
 		return nil // TODO: add meaningful error handling
@@ -178,8 +178,8 @@ func newPoiAntenna(freq byte, pos cord) *poiAntenna {
 
 }
 
-// newPoiAntinode Constructor
 func newPoiAntinode(pos cord, sources [2]*poi) *poiAntinode {
+	// newPoiAntinode Constructor
 	// icon is always '#'
 	// TODO: add type switch as check weather the sources are poiAntennas
 	return &poiAntinode{
@@ -201,7 +201,6 @@ func generateAntinodesModelTsk1(g *grid) []poiAntinode {
 			}
 		}
 	}
-
 	var newAntinodes []poiAntinode
 	//it's dirty to assume the freq is same as Icon but, need to change to getPoiAntennasByFreq()
 	for freq, _ := range freqSet { // only antennas of same frequency can generate antinodes
@@ -247,7 +246,6 @@ func generateAntinodesModelTsk2(g *grid) []poiAntinode {
 			}
 		}
 	}
-
 	var newAntinodes []poiAntinode
 	//it's dirty to assume the freq is same as Icon but, need to change to getPoiAntennasByFreq()
 	for freq, _ := range freqSet { // only antennas of same frequency can generate antinodes
@@ -360,7 +358,7 @@ func calcPosOfAntinodes(one poiAntenna, two poiAntenna, g grid) []cord {
 	// need grid to determine the boundaries
 	distanceOfSources := manhattanDistance(one.pos, two.pos)
 	newCordsList := make([]cord, 0)
-	distanceMultiplier := 1
+	distanceMultiplier := 0
 	for {
 		nextCord := cord{
 			x: two.pos.x + distanceOfSources.x*distanceMultiplier,
