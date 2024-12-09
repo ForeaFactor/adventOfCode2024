@@ -9,11 +9,14 @@ import (
 )
 
 func Main() {
-	input := readInput("./day_08/sample.txt")
+	input := readInput("./day_08/input.txt")
+
+	// tsk1
 	gridTsk1 := generateAntennasGridFromText(input)
 	antinodes := generateAntinodesModelTsk1(&gridTsk1)
 	gridTsk1.addPoiAntinodes(antinodes)
 
+	// tsk2
 	gridTsk2 := generateAntennasGridFromText(input)
 	antinodes = generateAntinodesModelTsk2(&gridTsk2)
 	gridTsk2.addPoiAntinodes(antinodes)
@@ -22,7 +25,7 @@ func Main() {
 	fmt.Printf("%d = Number of Antinodes\n", countAntinodes(gridTsk1))
 	fmt.Printf("%d = Number of Antinodes corrected Model (Tsk2)\n", countAntinodes(gridTsk2))
 
-	fmt.Printf("%s", gridTsk2.exportGridToText())
+	//fmt.Printf("%s", gridTsk2.exportGridToText())
 }
 
 type poi interface {
@@ -54,11 +57,6 @@ type poiAntinode struct {
 	icon    byte
 	pos     cord
 	sources [2]*poi // these should be antennas - but is not enforced
-}
-
-type vector struct {
-	xShift int
-	yShift int
 }
 
 func (g *grid) addPois(input []poi) {
