@@ -1,0 +1,2 @@
+# ignore all input.txt files (aoc wants them to be private)
+input.txt
