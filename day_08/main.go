@@ -14,18 +14,10 @@ func Main() {
 	antinodes := generateAntinodes(&locationsMap)
 	locationsMap.addPoiAntinodes(antinodes)
 
-	antinodesMap := grid{
-		pois:   make(map[cord][]poi),
-		width:  50,
-		height: 50,
-	}
-	antinodesMap.addPoiAntinodes(antinodes)
-
 	fmt.Printf("\n====== DAY 04 ======\n")
-	fmt.Printf("%d = Number of Antinodes\n", countAntinodes(antinodesMap))
-	//	fmt.Printf("%d = Number of Hastags (Antinodes) in Grid Export\n	  Number of Antinodes must be bigger than that\n", countHastagsInText(string(locationsMap.exportGridToText())))
+	fmt.Printf("%d = Number of Antinodes\n", countAntinodes(locationsMap))
 
-	print(string(antinodesMap.exportGridToText()))
+	fmt.Printf("%s", locationsMap.exportGridToText())
 }
 
 type poi interface {
@@ -34,13 +26,13 @@ type poi interface {
 	isAllowedToExistIn(g *grid) bool
 }
 
-//---------structs declaration---------
-
 type grid struct {
 	pois   map[cord][]poi //PointOfInterests
 	height int
 	width  int
 }
+
+//---------structs declaration---------
 
 type cord struct {
 	x int
@@ -89,7 +81,7 @@ func (g *grid) exportGridToText() []byte {
 	for y := 0; y < g.height; y++ {
 		for x := 0; x < g.width; x++ {
 			gridPoint := *g.getPoiByPos(cord{x, y})
-			icon := byte('.')
+			icon := byte(' ')
 			if gridPoint != nil {
 				icon = gridPoint.getIcon()
 			}
@@ -113,11 +105,11 @@ func (g *grid) getPoiByPos(c cord) *poi {
 	return &point
 }
 
-//---------methods declaration---------
-
 func (a poiAntenna) getPos() cord {
 	return a.pos
 }
+
+//---------methods declaration---------
 
 func (a poiAntenna) getIcon() byte {
 	return a.icon
@@ -249,8 +241,6 @@ func (g *grid) getPoisByIcon(icon byte) []*poi {
 	return result
 }
 
-//---------functions declaration---------
-
 func readInput(name string) []byte {
 	data, err := os.ReadFile(name)
 	if err != nil {
@@ -258,6 +248,8 @@ func readInput(name string) []byte {
 	}
 	return data
 }
+
+//---------functions declaration---------
 
 func generateAntennasGridFromText(input []byte) grid {
 	// assume ascii Encoding
@@ -315,15 +307,4 @@ func manhattanDistance(posOne cord, posTwo cord) cord {
 		x: posTwo.x - posOne.x,
 		y: posTwo.y - posOne.y,
 	}
-}
-
-// deed out of devestation
-func countHastagsInText(txt string) uint32 {
-	var count uint32 = 0
-	for _, ch := range txt {
-		if ch == '#' {
-			count++
-		}
-	}
-	return count
 }
