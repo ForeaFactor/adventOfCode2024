@@ -127,6 +127,9 @@ func (p *poi) rotate(dir string) error {
 	default:
 		err = errors.New("no such direction to turn to")
 	}
+	if err != nil {
+		// TODO Add logic to assign new Icon to rotated guards
+	}
 	return err
 }
 
