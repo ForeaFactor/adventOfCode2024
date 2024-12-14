@@ -9,13 +9,15 @@ import (
 )
 
 func Main() {
-	input := readInput("./day_06/sample.txt")
+	input := readInput("./day_06/input.txt")
+	output := writeFileInit("./day_06/output.txt")
+	defer output.Close()
 	lab := newGridFromText(input)
+	lab.moveTsk1(lab.getPoisByIcon(byte('^'))[0], output)
 
 	fmt.Printf("\n====== DAY 06 ======\n")
-	fmt.Printf("%d = number of positions the guard did not pass\n", 0)
-	fmt.Printf(string(lab.exportGridToText()))
-
+	fmt.Printf("%d = number of positions the guard did not pass\n", lab.countIcon(byte('X'), byte('v'), byte('<'), byte('>'), byte('^')))
+	//fmt.Printf(string(lab.exportGridToText()))
 }
 
 //---------structs declaration---------
@@ -44,10 +46,11 @@ type poi struct {
 //---------methods declaration---------
 
 func (g *grid) getPoiByPos(pos cord) (*poi, error) {
+	// poi outside the grid
 	if !g.containsCord(pos) {
 		return new(poi), errors.New("no such position in grid")
 	}
-	// check if key in map (poicord) exists
+	// poi inside grid but empty
 	point, ok := g.pois[pos]
 	if !ok {
 		// if empty -> i thought of an empty space poi
@@ -56,6 +59,24 @@ func (g *grid) getPoiByPos(pos cord) (*poi, error) {
 		point.pos = pos
 	}
 	return &point, nil
+}
+
+func (g *grid) getPoisByIcon(icon byte) []poi {
+	matches := make([]poi, 0)
+	for _, point := range g.pois {
+		if point.icon == icon {
+			matches = append(matches, point)
+		}
+	}
+	return matches
+}
+
+func (g *grid) setPoi(point poi) error {
+	if !g.containsCord(point.pos) {
+		return errors.New("no such position in grid")
+	}
+	g.pois[point.pos] = point
+	return nil
 }
 
 func (g *grid) exportGridToText() []byte {
@@ -88,15 +109,12 @@ func (g *grid) containsCord(c cord) bool {
 	return false
 }
 
-func (p *poi) setPos(c cord) {
-	// TODO: this method seems unnecessary
-	p.facing = c
-}
-
 func (p *poi) rotate(dir string) error {
 	var directions = [4]cord{
 		{0, -1}, {1, 0}, {0, 1}, {-1, 0},
 	}
+	var guardDirectionIcons = [4]byte{byte('^'), byte('>'), byte('v'), byte('<')}
+
 	var facing = -1 // dummy value
 	for dirIdx, comparedir := range directions {
 		if p.facing == comparedir {
@@ -112,25 +130,53 @@ func (p *poi) rotate(dir string) error {
 	switch dir {
 	case "right":
 		if facing == 3 {
-			p.facing = directions[0]
+			facing = 0
 		} else {
-			p.facing = directions[facing+1]
+			facing++
 		}
 		err = nil
 	case "left":
 		if facing == 0 {
-			p.facing = directions[3]
+			facing = 3
 		} else {
-			p.facing = directions[facing-1]
+			facing--
 		}
 		err = nil
 	default:
 		err = errors.New("no such direction to turn to")
 	}
+	p.facing = directions[facing]
+	p.icon = guardDirectionIcons[facing]
+	// TODO only set new Icon, when the icon before was a guard
+	// TODO Add logic to assign new Icon to rotated guards
 	if err != nil {
-		// TODO Add logic to assign new Icon to rotated guards
 	}
 	return err
+}
+
+func (g *grid) movePoiForward(p poi) (poi, error) {
+	var nextPointPos = addCord(p.pos, p.facing)
+	poiInfront, err := g.getPoiByPos(nextPointPos)
+	if err != nil {
+		return poi{}, err // TODO dont know if empty poi is good return value here
+	}
+	if poiInfront.icon != byte('#') {
+		visitedPoi, _ := newPoiFromIcon(byte('X'), p.pos) // at current pos
+		p.pos = poiInfront.pos
+		err = g.setPoi(p) // copy forward
+		if err != nil {
+			return poi{}, err
+		}
+		err = g.setPoi(visitedPoi) // overwrite previoius
+		if err != nil {
+			return poi{}, err
+		}
+	} else if poiInfront.icon == byte('#') {
+		if err = p.rotate("right"); err != nil {
+			return poi{}, err
+		}
+	}
+	return p, nil // returns the moved poi
 }
 
 func newGridFromText(input []byte) grid {
@@ -182,6 +228,33 @@ func newPoiFromIcon(b byte, pos cord) (poi, error) {
 	return point, nil
 }
 
+func (g *grid) moveTsk1(p poi, output *os.File) {
+	/*_, err := output.WriteString(string(g.exportGridToText()) + "\n")
+	if err != nil {
+		log.Fatal(err)
+	}
+	*/
+	movedPoi, err := g.movePoiForward(p) // assumes an error when trying to move outside the grid
+	if err == nil {
+		g.moveTsk1(movedPoi, output)
+	}
+	if err != nil {
+		fmt.Printf("end of loop: %s", err)
+	}
+}
+
+func (g *grid) countIcon(icons ...byte) int {
+	var count = 0
+	for _, point := range g.pois {
+		for _, icon := range icons {
+			if point.icon == icon {
+				count++
+			}
+		}
+	}
+	return count
+}
+
 //---------functions declaration---------
 
 func isIntBetween(lower int, upper int, x int) bool {
@@ -195,4 +268,19 @@ func readInput(name string) []byte {
 		log.Fatal(err)
 	}
 	return data
+}
+
+func addCord(p2 cord, p1 cord) cord {
+	return cord{
+		p1.x + p2.x,
+		p1.y + p2.y,
+	}
+}
+
+func writeFileInit(name string) *os.File {
+	f, err := os.Create(name)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return f
 }
